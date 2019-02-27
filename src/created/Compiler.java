@@ -6,23 +6,26 @@ class Compiler{
     public static void main(String args[]){
 
 	String sourceName = null, option = null;
-	boolean advance = false, ASTdebug = false, IRdebug = false, BlockDebug = false;
+	boolean advance = false, assembly = false, ASTdebug = false, IRdebug = false, BlockDebug = false;
 	if(args.length == 2){
 	    sourceName = args[1];
 	    option = args[0];
 	    switch(option){
 	    case "-A":
-		advance = true;
-		break;
+	    	advance = true;
+	    	break;
+	    case "-S":
+	    	assembly = true;
+	    	break;
 	    case "-AST":
-		ASTdebug = true;
-		break;
+	    	ASTdebug = true;
+	    	break;
 	    case "-IR":
-		IRdebug = true;
-		break;
+	    	IRdebug = true;
+	    	break;
 	    case "-BLK":
-		BlockDebug = true;
-		break;
+	    	BlockDebug = true;
+	    	break;
 	    default:
 		System.out.println("Error : No such option \"" + option + "\".");
 		System.exit(1);
@@ -37,15 +40,15 @@ class Compiler{
 	try{
 	    //FileReader source;
 
-	    if(advance == true || BlockDebug == true){
+	    if(advance || BlockDebug){
 		//source = new FileReader(new File(sourceName));
 		Parser.advancedParsing(sourceName,BlockDebug);
 	    }
-	    else if(ASTdebug == true){
+	    else if(ASTdebug){
 		//source = new FileReader(new File(sourceName));
 		Parser.ASTdebug(sourceName);
 	    }
-	    else if(IRdebug == true){
+	    else if(IRdebug){
 		//source = new FileReader(new File(sourceName));
 		Parser.IRdebug(sourceName);
 	    }
@@ -57,6 +60,10 @@ class Compiler{
 
 	    System.out.println("Generating assembly code...");
 	    AssemblyGenerator.Generate();
+	    
+	    if(assembly) {
+	    	System.exit(0);
+	    }
 
 	    Runtime r = Runtime.getRuntime();
 	    Process p = r.exec("as Assembly.s -o Object.o");
