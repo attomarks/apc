@@ -4,6 +4,7 @@ import javacc.*;
 
 public class ParserVisitorImplements implements ParserVisitor {
 
+    List<String> var_name = new ArrayList<>();
     static List<String> var_temp = new ArrayList<>();
     List<String> labels = new ArrayList<>();
     int label_count = 0;
@@ -92,7 +93,6 @@ public class ParserVisitorImplements implements ParserVisitor {
 	public Object visit(ASTdef_vars node, Object data){
 	    //System.out.println("visited ASTdef_vars");
 	    int size = node.jjtGetNumChildren();
-	    List<String> var_name = new ArrayList<>();
 	    List<String> var_value = new ArrayList<>();
 	    String type = node.jjtGetChild(0).jjtAccept(this,null).toString();
 	    for(int i=1;i<size;i++){
@@ -166,10 +166,10 @@ public class ParserVisitorImplements implements ParserVisitor {
 	@Override
 	public Object visit(ASTstmt node, Object data){
 	    //System.out.println("visited ASTstmt");
-		for(int i=0; i<suff.size(); i++) {
+		/*for(int i=0; i<suff.size(); i++) {
 			IRG.IRposf(suff.get(i));
 		}
-		suff.clear();
+		suff.clear();*/
 	       return node.jjtGetChild(0).jjtAccept(this,null);
 	}
 
@@ -266,6 +266,10 @@ public class ParserVisitorImplements implements ParserVisitor {
 		IRG.IRexpr(term,node.jjtGetChild(1).jjtAccept(this,null).toString());
 		return term;
 	    }
+	    for(int i=0; i<suff.size(); i++) {
+			IRG.IRposf(suff.get(i));
+		}
+		suff.clear();
 	    return term;
 	}
 
@@ -413,7 +417,7 @@ public class ParserVisitorImplements implements ParserVisitor {
 	    }else {
 	    	String var = (String)node.jjtGetChild(0).jjtAccept(this,null);
 	    	String op = (String)node.jjtGetValue();
-			System.out.println("suffix: "+op);
+			//System.out.println("suffix: "+op);
 			if(op != null) suff.add(op+","+var);
 	    	return var;
 	    }
@@ -434,7 +438,7 @@ public class ParserVisitorImplements implements ParserVisitor {
 	@Override
 	public Object visit(ASTprimary node, Object data){
 	    //System.out.println("visited ASTprimary");
-	    System.out.println("primary: " + node.jjtGetValue().toString());
+	    //System.out.println("primary: " + node.jjtGetValue().toString());
 	       return node.jjtGetValue();
 	}
 

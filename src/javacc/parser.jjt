@@ -48,12 +48,12 @@ public class Parser {
 				}
 			}catch(ParseException e) {
 			  modified = true;
-				log.add("!!!!!Syntax error in block" + blockNum + ".!!!!!");
+				log.add("Syntax error in block" + blockNum + ".");
 				log.add("Opening Syntax Error Recovery...");
 				String modBlock = Curses.Recover(curBlock, blockNum);
 				log.add("");
 				DivideIntoBlocks.replace(blockNum, modBlock);
-				log.add("Retry parsing from block " + blockNum + ".");
+				log.add("Resume from block " + blockNum + ".");
 				blockNum--;
 			}
 		}
