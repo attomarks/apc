@@ -7,6 +7,7 @@ public class ParserVisitorImplements implements ParserVisitor {
     static List<String> var_temp = new ArrayList<>();
     List<String> labels = new ArrayList<>();
     int label_count = 0;
+    List<String> suff = new ArrayList<>();
     IRGenerator IRG = new IRGenerator();
     
 	@Override
@@ -165,6 +166,10 @@ public class ParserVisitorImplements implements ParserVisitor {
 	@Override
 	public Object visit(ASTstmt node, Object data){
 	    //System.out.println("visited ASTstmt");
+		for(int i=0; i<suff.size(); i++) {
+			IRG.IRposf(suff.get(i));
+		}
+		suff.clear();
 	       return node.jjtGetChild(0).jjtAccept(this,null);
 	}
 
@@ -402,9 +407,16 @@ public class ParserVisitorImplements implements ParserVisitor {
 	    if(size == 2){
 		String name = node.jjtGetChild(0).jjtAccept(this,null).toString();
 		node.jjtGetChild(1).jjtAccept(this,null);
+		/*String op = (String)node.jjtGetValue();
+		System.out.println("suffix: "+op);*/
 		return name;
-	    }else
-		return node.jjtGetChild(0).jjtAccept(this,null);
+	    }else {
+	    	String var = (String)node.jjtGetChild(0).jjtAccept(this,null);
+	    	String op = (String)node.jjtGetValue();
+			System.out.println("suffix: "+op);
+			if(op != null) suff.add(op+","+var);
+	    	return var;
+	    }
 	}
 
     	@Override
@@ -422,7 +434,7 @@ public class ParserVisitorImplements implements ParserVisitor {
 	@Override
 	public Object visit(ASTprimary node, Object data){
 	    //System.out.println("visited ASTprimary");
-	    //System.out.println("ASTprimary " + node.jjtGetValue().toString());
+	    System.out.println("primary: " + node.jjtGetValue().toString());
 	       return node.jjtGetValue();
 	}
 

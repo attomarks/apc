@@ -98,6 +98,10 @@ public class IRGenerator {
     public static void IRjne(String label){
 	IR.add("jne,,,"+label);
     }
+    
+    public static void IRposf(String opvar) {
+    	IR.add("posf,,"+opvar);
+    }
 
    public static void IRGenerate(){
 	//System.out.println(var_list);

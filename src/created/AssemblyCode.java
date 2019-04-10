@@ -4,7 +4,7 @@ import java.io.*;
 
 public class AssemblyCode {
 
-    static File  AssemblyFile;
+    static File AssemblyFile;
     static PrintWriter pw;
     static List<String> funcName = new ArrayList<>();
     static String funcNameNow = null;
@@ -341,6 +341,18 @@ public class AssemblyCode {
 
     static void jne(String label){
 	pw.println("    jne "+label);
+    }
+    
+    static void suff(String op, String var) {
+    	int address = searchAddress(var);
+    	switch(op) {
+    	case "++":
+    		pw.println("    addl    $1, "+address+"(%rbp)");
+    		break;
+    	case "--":
+    		pw.println("    subl    $1, "+address+"(%rbp)");
+    		break;
+    	}
     }
 
     static void printf(String StringLabel){

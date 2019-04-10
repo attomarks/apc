@@ -443,15 +443,17 @@ void unary():
 }
 
 void postfix():
-{}
+{
+   String token = null;
+  }
 {
 	primary()
-	(/*"++"
-	|"--"
-	|"[" expr() "]"
+	("++" { token = "++"; }
+	|"--" { token = "--"; } 
+	|/*"[" expr() "]"
 	|"." name()
 	|"->" name()
-	|*/"(" args() ")")*
+	|*/"(" args() ")")* {jjtThis.jjtSetValue(token);}
 }
 
 void args():

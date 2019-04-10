@@ -78,6 +78,9 @@ public class AssemblyGenerator {
 	    case "jne":
 		AssemblyCode.jne(IR[3]);
 		break;
+	    case "posf":
+	    	AssemblyCode.suff(IR[2],IR[3]);
+	    	break;
 	    case "printf":
 		int address = IRGenerator.getAddress(IR[3]);
 		if(address == -1){
