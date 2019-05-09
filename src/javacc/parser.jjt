@@ -15,7 +15,7 @@ import java.io.*;
 
 public class Parser {
     
-	public static void advancedParsing(String sourceName, boolean BlockDebug){
+	public static void advancedParsing(String sourceName, boolean BlockDebug, boolean IRDebug){
 
 	System.out.println("Checking syntax in the advanced method...");
 	int blockNum = 0;
@@ -35,17 +35,21 @@ public class Parser {
 		Curses.Window();
 		source = new FileReader(new File(sourceName));
 		Curses.setSource(source);
+		ParserVisitor visitor = new ParserVisitorImplements(true);
+		//IRGenerator.advFlag();
 		for(blockNum = 0; blockNum < numOfBlocks; blockNum++){
 			log.add("Checking block" + blockNum + "...");
 			curBlock = DivideIntoBlocks.blockRef(blockNum);
 			//System.out.println(curBlock);
 			Parser part = new Parser(new StringReader(curBlock));
+			 
 			try {
 				if(blockNum == 0) {
-				  part.defines();
+				  part.defines().jjtAccept(visitor,null);
 				}else {
-				  part.chkblk();
+				  part.chkblk().jjtAccept(visitor,null);
 				}
+				IRGenerator.IRfragConfirm();
 			}catch(ParseException e) {
 			  modified = true;
 				log.add("Syntax error in block" + blockNum + ".");
@@ -63,6 +67,10 @@ public class Parser {
        System.exit(1);
     }
 	Curses.Close();
+	if(IRDebug) { 
+		IRGenerator.IRGenerate(true);
+	}
+	IRGenerator.IRConfirm();
 	log.add("Processed successfully.");
 	for(int i=0; i<log.size(); i++) {
 		System.out.println(log.get(i));
@@ -78,9 +86,14 @@ public class Parser {
 	}catch(IOException e) {
 	  e.printStackTrace();
 	}
+}
+	if(IRDebug) {
+	  IRGenerator.IRGenerate(false);
+	  System.exit(0);
 	}
 
-	System.out.println("Parsing in the general method...");
+
+	/*System.out.println("Parsing in the general method...");
 	try{
 	  	FileReader source = new FileReader(new File(sourceName));
 	    Parser parser = new Parser(source);
@@ -89,7 +102,7 @@ public class Parser {
 	}catch(Exception e){
 	    e.printStackTrace();
 	    System.exit(1);
-	}
+	}*/
 }
 
    public static void ASTdebug(String sourceName){
@@ -110,9 +123,9 @@ public class Parser {
 	try{
 	  	FileReader source = new FileReader(new File(sourceName));
 	    Parser IR = new Parser(source);
-	    ParserVisitor visitor = new ParserVisitorImplements();
+	    ParserVisitor visitor = new ParserVisitorImplements(false);
 	    IR.body().jjtAccept(visitor,null);
-	    IRGenerator.IRGenerate();
+	    IRGenerator.IRGenerate(false);
 	}catch(Exception e){
 	    e.printStackTrace();
 	}
@@ -124,7 +137,7 @@ public class Parser {
 	try{
 	  	FileReader source = new FileReader(new File(sourceName));
 	    Parser parser = new Parser(source);
-	    ParserVisitor visitor = new ParserVisitorImplements();
+	    ParserVisitor visitor = new ParserVisitorImplements(false);
 	    parser.body().jjtAccept(visitor,null);
 	}catch(Exception e){
 	    e.printStackTrace();
@@ -192,18 +205,18 @@ SimpleNode body() #body:
 	defines() <EOF> {return jjtThis;}
 }
 
-void chkblk():
+SimpleNode chkblk():
 {}
 {
-	def_var_list() stmts()
+	def_var_list() stmts() { return jjtThis; }
 }
 
-void defines():
+SimpleNode defines():
 {}
 {
 	(LOOKAHEAD(/*storage()*/ type_ref() <IDENTIFIER> "(") def_fun()
 	|LOOKAHEAD(3) def_vars()
-	/*|def_const()*/)*
+	/*|def_const()*/)* { return jjtThis; }
 }
 
 void def_fun():
@@ -234,7 +247,7 @@ void param():
 void block():
 {}
 {
-	"{" def_var_list() stmts() "}"
+	"{" chkblk() "}"
 }
 
 void def_var_list() #def_var_list(>1):

@@ -26,6 +26,10 @@ class Compiler{
 	    case "-BLK":
 	    	BlockDebug = true;
 	    	break;
+	    case "-AIR" :
+	    	advance = true;
+	    	IRdebug = true;
+	    	break;
 	    default:
 		System.out.println("Error : No such option \"" + option + "\".");
 		System.exit(1);
@@ -42,7 +46,7 @@ class Compiler{
 
 	    if(advance || BlockDebug){
 		//source = new FileReader(new File(sourceName));
-		Parser.advancedParsing(sourceName,BlockDebug);
+		Parser.advancedParsing(sourceName,BlockDebug,IRdebug);
 	    }
 	    else if(ASTdebug){
 		//source = new FileReader(new File(sourceName));

@@ -9,7 +9,12 @@ public class ParserVisitorImplements implements ParserVisitor {
     List<String> labels = new ArrayList<>();
     int label_count = 0;
     List<String> suff = new ArrayList<>();
+    int fragNum = 0;
     IRGenerator IRG = new IRGenerator();
+    
+    public ParserVisitorImplements(boolean adv){
+    	if(adv) IRG.Advance = true;
+    }
     
 	@Override
 	public Object visit(SimpleNode node, Object data){
@@ -18,7 +23,9 @@ public class ParserVisitorImplements implements ParserVisitor {
 	
 	@Override
 	public Object visit(ASTchkblk node, Object data){
-	       return null;
+		for(int i=0; i<node.jjtGetNumChildren(); i++)
+			node.jjtGetChild(i).jjtAccept(this,null);
+		return null;
 	}
 
 	@Override
@@ -76,6 +83,8 @@ public class ParserVisitorImplements implements ParserVisitor {
 	@Override
 	public Object visit(ASTblock node, Object data){
 	    //System.out.println("visited ASTblock");
+		fragNum++;
+		IRG.blank(fragNum);
 	    int size = node.jjtGetNumChildren();
 	    for(int i=0;i<size;i++){
 		node.jjtGetChild(i).jjtAccept(this,null);

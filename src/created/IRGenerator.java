@@ -10,18 +10,21 @@ public class IRGenerator {
     static List<Integer> func_flame = new ArrayList<>();
     static List<String> printStr = new ArrayList<>();
     public static List<String> IR = new ArrayList<>();
+    static List<String> IRfrag = new ArrayList<>();
+    static String IRtemp = "";
+    static boolean Advance = false;
     
     public static void IRlabel(String label){
-	IR.add("label,,,"+label);
+	Add("label,,,"+label);
     }
 
     public static void IRdef_fun(String type, String name){
-	IR.add("func,,"+type+","+name);
+	Add("func,,"+type+","+name);
 	func_type = type;
     }
 
     static void IRdef_var(String type, String name){
-	IR.add("var,,"+type+","+name);
+	Add("var,,"+type+","+name);
     }
     
     public static void IRvar_ini(String type, String name, String value){
@@ -33,7 +36,7 @@ public class IRGenerator {
 	case "double": var_list.add(name); flame_size += 8; break;
 	default : System.out.println("Error in IRdef_vars.");
 	}
-	if(!(value.equals("null"))) IR.add("=,"+value+",,"+name);
+	if(!(value.equals("null"))) Add("=,"+value+",,"+name);
     }
 
     static void IRparam(String type, String name){
@@ -45,11 +48,11 @@ public class IRGenerator {
 	case "double": var_list.add(name); flame_size += 8; break;
 	default : System.out.println("Error in IRparam.");
 	}
-	IR.add("param,,"+type+","+name);
+	Add("param,,"+type+","+name);
     }
 
     public static void IRreturn_stmt(String value){
-	IR.add("rtn,,,"+value);
+	Add("rtn,,,"+value);
 	func_type = null;
 	//System.out.println(flame_size);
 	func_flame.add(flame_size);
@@ -64,50 +67,109 @@ public class IRGenerator {
 	}else{
 	    strNum = printStr.indexOf(str);
 	}
-	IR.add("printf,,0,.LC"+strNum);
+	Add("printf,,0,.LC"+strNum);
     }
 
     public static void IRprintf_stmt(String var, int varNum){
-	IR.add("printf,,"+varNum+","+var);
+	Add("printf,,"+varNum+","+var);
     }
 	
     public static void IRexpr(String op, String lhs, String rhs, String eq){
-	IR.add(op+","+lhs+","+rhs+","+eq);
+	Add(op+","+lhs+","+rhs+","+eq);
     }
 
     public static void IRexpr(String temp, String eq){
 	//if(Simple_Assign == true){
-	    IR.add("=,"+eq+",,"+temp);
+	    Add("=,"+eq+",,"+temp);
 	    /*}else{
-	    IR.add(temp+","+eq);
+	    Add(temp+","+eq);
 	    }*/
     }
 
     static void IRarg(String name){
-	IR.add("arg,,,"+name);
+	Add("arg,,,"+name);
     }
 
     public static void IRjnz(String label){
-	IR.add("jnz,,,"+label);
+	Add("jnz,,,"+label);
     }
 
     public static void IRjmp(String label){
-	IR.add("jmp,,,"+label);
+	Add("jmp,,,"+label);
     }
 
     public static void IRjne(String label){
-	IR.add("jne,,,"+label);
+	Add("jne,,,"+label);
     }
     
     public static void IRposf(String opvar) {
-    	IR.add("posf,,"+opvar);
+    	Add("posf,,"+opvar);
     }
+    
+    public static void Add(String code) {
+    	if(Advance) IRtemp += code + "\n";
+    	else IR.add(code);
+    }
+    
+    public void blank(int fragNum) {
+    	String str = ">>>" + fragNum + "\n";
+    	if(Advance) IRtemp += str;
+    }
+    
+   public static void IRfragConfirm() {
+	   IRfrag.add(IRtemp);
+	   IRtemp = "";
+   }
+   
+   public static void IRConfirm() {
+	   int fragNum = 0;
+	   int index;
+	   Deque<Integer> incompNum = new ArrayDeque<>();
+	   String line = null;
+	   try{
+		   while(true) {
+			   BufferedReader br = new BufferedReader(new StringReader(IRfrag.get(fragNum)));
+			   //System.out.println("fragNum:"+fragNum);
+			   while((line = br.readLine()) != null) {
+				   //System.out.println("line:"+line);
+				   index = IRfrag.get(fragNum).indexOf("\n");
+				   IRfrag.set(fragNum, IRfrag.get(fragNum).substring(index+1));
+				   if(line.contains(">>>")) {
+					   incompNum.push(fragNum);
+					   fragNum = Integer.parseInt(line.substring(3));
+					   //System.out.println("nextFragNum:"+fragNum);
+					   break;
+				   }else {
+					   IR.add(line);
+				   }
+			   }
+			   //System.out.println("line:"+line+" incompSize:"+incompNum.size());
+			   if(line == null && incompNum.size() != 0) {
+				   fragNum = incompNum.pop();
+			   }else if(line == null && incompNum.size() == 0){
+				   break;
+			   }else {
+				   
+			   }
+		   }
+	   }catch(Exception e) {
+		   e.printStackTrace();
+	   }
+   }
 
-   public static void IRGenerate(){
+   public static void IRGenerate(boolean adv){
 	//System.out.println(var_list);
-	for(int i=0;i<IR.size();i++){
-	    System.out.println(IR.get(i));
-	}
+	   if(adv) {
+		   System.out.println("-----------------");
+		   for(int i=0;i<IRfrag.size();i++){
+			   System.out.print(IRfrag.get(i));
+			   System.out.println("-----------------");
+		   }
+	   }else {
+		   for(int i=0;i<IR.size();i++){
+			   System.out.println(IR.get(i));
+		   }
+	   }
     }
 
     static String[] IRRead(int line){
