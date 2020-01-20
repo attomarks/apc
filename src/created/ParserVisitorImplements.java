@@ -23,6 +23,7 @@ public class ParserVisitorImplements implements ParserVisitor {
 	
 	@Override
 	public Object visit(ASTchkblk node, Object data){
+		//System.out.println("visited ASTchkblk");
 		for(int i=0; i<node.jjtGetNumChildren(); i++)
 			node.jjtGetChild(i).jjtAccept(this,null);
 		return null;
@@ -271,9 +272,9 @@ public class ParserVisitorImplements implements ParserVisitor {
 	    //System.out.println("visited ASTexpr");
 	    //System.out.println("expr_Children = " + node.jjtGetNumChildren());
 	    String term = node.jjtGetChild(0).jjtAccept(this,null).toString();
-	    if(node.jjtGetValue().toString() == "="){
-		IRG.IRexpr(term,node.jjtGetChild(1).jjtAccept(this,null).toString());
-		return term;
+	    if(node.jjtGetValue().toString().equals("=")){
+	    	IRG.IRexpr(term,node.jjtGetChild(1).jjtAccept(this,null).toString());
+	    	return term;
 	    }
 	    for(int i=0; i<suff.size(); i++) {
 			IRG.IRposf(suff.get(i));

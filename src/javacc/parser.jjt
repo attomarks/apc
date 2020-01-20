@@ -14,51 +14,92 @@ import java.util.*;
 import java.io.*;
 
 public class Parser {
+	//static String getTokens = "";
     
 	public static void advancedParsing(String sourceName, boolean BlockDebug, boolean IRDebug){
 
 	System.out.println("Checking syntax in the advanced method...");
 	int blockNum = 0;
 	String curBlock = null;
+	String blkFileName = null;
 	boolean modified = false;
+	boolean cursesRunning = false;
+	List<SimpleNode> snodes = new ArrayList<SimpleNode>();
 	List<String> log = new ArrayList<String>();
 
 	try{
 	  	FileReader source = new FileReader(new File(sourceName));
-		int numOfBlocks = DivideIntoBlocks.Dividing(source);
+		int numOfBlocks = BlockManager.Dividing(source);
 		if(BlockDebug == true){
-			DivideIntoBlocks.Generate();
+			BlockManager.Generate();
 			System.exit(0);
 		}
 		source.close();
 
-		Curses.Window();
+		//Curses.Window();
 		source = new FileReader(new File(sourceName));
-		Curses.setSource(source);
+		//Curses.setSource(source);
 		ParserVisitor visitor = new ParserVisitorImplements(true);
-		//IRGenerator.advFlag();
+		SimpleNode snode = null;
+		boolean reparse = BlockManager.getPreData(sourceName);
+		int reuseNum;
+
 		for(blockNum = 0; blockNum < numOfBlocks; blockNum++){
-			log.add("Checking block" + blockNum + "...");
-			curBlock = DivideIntoBlocks.blockRef(blockNum);
-			//System.out.println(curBlock);
-			Parser part = new Parser(new StringReader(curBlock));
-			 
-			try {
-				if(blockNum == 0) {
-				  part.defines().jjtAccept(visitor,null);
-				}else {
-				  part.chkblk().jjtAccept(visitor,null);
-				}
+			reuseNum=BlockManager.compare(blockNum);
+			if(reparse && reuseNum != -1) {
+				log.add("Block" + blockNum + " can be reused...");
+				blkFileName = sourceName.replace(".c","")+"_blk"+reuseNum+".bin";
+
+				ObjectInputStream objInStream = new ObjectInputStream(new FileInputStream(blkFileName));
+              snode = (SimpleNode) objInStream.readObject();
+              objInStream.close();
+
+              log.add("Block" + blockNum + " is reused.");
+              snodes.add(snode);
+              snode.jjtAccept(visitor,null);
 				IRGenerator.IRfragConfirm();
-			}catch(ParseException e) {
-			  modified = true;
-				log.add("Syntax error in block" + blockNum + ".");
-				log.add("Opening Syntax Error Recovery...");
-				String modBlock = Curses.Recover(curBlock, blockNum);
-				log.add("");
-				DivideIntoBlocks.replace(blockNum, modBlock);
-				log.add("Resume from block " + blockNum + ".");
-				blockNum--;
+			}else { 
+				log.add("Checking block" + blockNum + "...");
+				curBlock = BlockManager.blockRef(blockNum);
+				//System.out.println(curBlock);
+				Parser part = new Parser(new StringReader(curBlock));
+				blkFileName = sourceName.replace(".c","")+"_blk"+blockNum+".bin";
+				
+				try {
+					//if(!(new File(blkFileName).exists())) {
+					if(blockNum == 0) {
+				   		snode = part.defines();
+					}else{
+				  		snode = part.chkblk();
+					}
+
+					/*ObjectOutputStream objOutStream = new ObjectOutputStream(new FileOutputStream(blkFileName));
+                 	objOutStream.writeObject(snode);
+                 	objOutStream.close();*/
+
+                 	log.add("Block" + blockNum + " is parsed.");
+                 	snodes.add(snode);
+					snode.jjtAccept(visitor,null);
+					IRGenerator.IRfragConfirm();
+				}catch(ParseException e) {
+			  		modified = true;
+					log.add("Syntax error in block" + blockNum + ".");
+					log.add("Opening Syntax Error Recovery...");
+
+					if(cursesRunning == false) {
+						Curses.Window();
+						cursesRunning = true;
+						Curses.setSource(source);
+					}
+
+					Curses.setErrorMsg(e.getMessage().toString());
+					String modBlock = Curses.Recover(curBlock, blockNum);
+					log.add("");
+					BlockManager.replace(blockNum, modBlock);
+					Curses.resetSource(BlockManager.sourceRebuild());
+					log.add("Resuming from block " + blockNum + ".");
+					blockNum--;
+				}
 			}
 		}
 	}catch(Exception e){
@@ -66,43 +107,49 @@ public class Parser {
        e.printStackTrace();
        System.exit(1);
     }
-	Curses.Close();
-	if(IRDebug) { 
+
+	if(cursesRunning) 
+		Curses.Close();
+
+	if(IRDebug)
 		IRGenerator.IRGenerate(true);
-	}
+
 	IRGenerator.IRConfirm();
+	BlockManager.Output(sourceName);
 	log.add("Processed successfully.");
 	for(int i=0; i<log.size(); i++) {
 		System.out.println(log.get(i));
 	}
+	//BlockManager.blockDebug();
 	
 	if(modified) {
-	  try {
-	    sourceName = sourceName.replace(".c","")+"_modified.c";
-	    FileWriter fw = new FileWriter(sourceName);
-	    PrintWriter pw = new PrintWriter(new BufferedWriter(fw));
-	  pw.print(DivideIntoBlocks.sourceRebuild());
-	  pw.close();
-	}catch(IOException e) {
-	  e.printStackTrace();
+		try {
+	    	//sourceName = sourceName.replace(".c","")+"_modified.c";
+	    	FileWriter fw = new FileWriter(sourceName);
+	    	PrintWriter pw = new PrintWriter(new BufferedWriter(fw));
+	  		pw.print(BlockManager.sourceRebuild());
+	  		pw.close();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
-}
+
+	try { 
+		for(int i=0; i<snodes.size(); i++) {
+		  	blkFileName = sourceName.replace(".c","")+"_blk"+i+".bin";
+			ObjectOutputStream objOutStream = new ObjectOutputStream(new FileOutputStream(blkFileName));
+       	objOutStream.writeObject(snodes.get(i));
+       	objOutStream.close();
+       	}
+	}catch(Exception e) {
+		e.printStackTrace();
+	}
+	
 	if(IRDebug) {
 	  IRGenerator.IRGenerate(false);
 	  System.exit(0);
 	}
-
-
-	/*System.out.println("Parsing in the general method...");
-	try{
-	  	FileReader source = new FileReader(new File(sourceName));
-	    Parser parser = new Parser(source);
-	    ParserVisitor visitor = new ParserVisitorImplements();
-	    parser.body().jjtAccept(visitor,null);
-	}catch(Exception e){
-	    e.printStackTrace();
-	    System.exit(1);
-	}*/
+	//System.out.println("Tokens: "+getTokens);
 }
 
    public static void ASTdebug(String sourceName){
@@ -415,8 +462,8 @@ void expr2() #expr2(>1):
 }
 {
 	expr1()
-	("+" expr1() {tokens.add("+");}
-	|"-" expr1() {tokens.add("-");}
+	("+" expr1() {tokens.add("+"); /*getTokens+="+";*/}
+	|"-" expr1() {tokens.add("-"); /*getTokens+="-";*/}
 	)* {jjtThis.jjtSetValue(tokens);}
 }
 

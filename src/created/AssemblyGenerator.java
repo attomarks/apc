@@ -8,27 +8,27 @@ public class AssemblyGenerator {
 	AssemblyCode.headTemp1();
 	AssemblyCode.setString();
 	AssemblyCode.headTemp2();
-	//IRGenerator.addWkToList();
 	//AssemblyCode.expandStack(IRGenerator.getStackSize());
 
 	int func_num = 0;
 	for(int i=0;i<IRGenerator.IRNumOfLines();i++){
 	    
 	    String[] IR = IRGenerator.IRRead(i);
+	    //if((!IR[0].equals("rtn"))) System.out.println(IR[0]+","+IR[1]+","+IR[2]+","+IR[3]);
 	    switch(IR[0]){
 	    case "func":
-		int flame = IRGenerator.getFlame(func_num);
+		//int flame = IRGenerator.getFlame(func_num);
 		func_num++;
-		AssemblyCode.function(flame,IR[3]);
+		AssemblyCode.function(/*flame,*/IR[3]);
 		break;
 	    case "param":
-		AssemblyCode.parameter(IR[2],IR[3]);
+		AssemblyCode.parameter(IR[3]);
 		break;
 	    case "arg":
 		AssemblyCode.argument(IR[3]);
 		break;
 	    case "var":
-		AssemblyCode.variable(IR[2],IR[3]);
+		AssemblyCode.variable(IR[3]);
 		break;
 	    case "=": 
 		AssemblyCode.assign(IR[3],IR[1]);
@@ -82,15 +82,18 @@ public class AssemblyGenerator {
 	    	AssemblyCode.suff(IR[2],IR[3]);
 	    	break;
 	    case "printf":
-		int address = IRGenerator.getAddress(IR[3]);
-		if(address == -1){
+		//int address = SymbolTable.searchAddress(IR[3]);
+		if(IR[2].equals("0")){
 		    AssemblyCode.printf(IR[3]);
 		}else{
-		    AssemblyCode.printf(Integer.parseInt(IR[2]),address);
+		    AssemblyCode.printf(Integer.parseInt(IR[2]),IR[3]);
 		}break;
+	    case "rtnval":
+	    	AssemblyCode.rtnval(IR[3]);
+	    	break;
 	    case "rtn":
-		AssemblyCode.ret(IR[3]);
-		break;
+	    	AssemblyCode.rtn();
+	    	break;
 	    }
 	}
 	AssemblyCode.footTemp();

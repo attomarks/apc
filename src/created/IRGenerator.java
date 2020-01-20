@@ -112,12 +112,12 @@ public class IRGenerator {
     }
     
     public void blank(int fragNum) {
-    	String str = ">>>" + fragNum + "\n";
+    	String str = ">>>"/* + fragNum*/ + "\n";
     	if(Advance) IRtemp += str;
     }
     
    public static void IRfragConfirm() {
-	   IRfrag.add(IRtemp);
+	   IRfrag.add(IRtemp); //System.out.println(IRfrag.size()+"\n"+IRtemp);
 	   IRtemp = "";
    }
    
@@ -125,25 +125,44 @@ public class IRGenerator {
 	   int fragNum = 0;
 	   int index;
 	   Deque<Integer> incompNum = new ArrayDeque<>();
+	   List<Boolean> compNum = new ArrayList<>();
 	   String line = null;
 	   try{
+		   
+		   int size = IRfrag.size();
+		    for(int i=0;i<size;i++){
+				compNum.add(false);
+			 }
+		   
 		   while(true) {
 			   BufferedReader br = new BufferedReader(new StringReader(IRfrag.get(fragNum)));
 			   //System.out.println("fragNum:"+fragNum);
 			   while((line = br.readLine()) != null) {
 				   //System.out.println("line:"+line);
-				   index = IRfrag.get(fragNum).indexOf("\n");
-				   IRfrag.set(fragNum, IRfrag.get(fragNum).substring(index+1));
+				   String str = IRfrag.get(fragNum);
+				   index = str.indexOf("\n");
+				   IRfrag.set(fragNum,str.substring(index+1));
+				   //System.out.println("index="+index+"\n"+IRfrag.get(fragNum));
 				   if(line.contains(">>>")) {
 					   incompNum.push(fragNum);
-					   fragNum = Integer.parseInt(line.substring(3));
+					   for(int i = fragNum+1; i<compNum.size(); i++) {
+						   //System.out.println("i="+i);
+						   if(compNum.get(i) == false) {
+							   fragNum = i;
+							   break;
+						   }
+						   //System.out.println("fragNum="+fragNum);
+					   }
+					   //fragNum = Integer.parseInt(line.substring(3));
 					   //System.out.println("nextFragNum:"+fragNum);
 					   break;
 				   }else {
 					   IR.add(line);
 				   }
 			   }
-			   //System.out.println("line:"+line+" incompSize:"+incompNum.size());
+			   //System.out.println("line:"+line+" incompSize:"+incompNum.size()+" num:"+incompNum.peek());
+			   //System.out.println("compNum:"+compNum);
+			   compNum.set(fragNum,true);
 			   if(line == null && incompNum.size() != 0) {
 				   fragNum = incompNum.pop();
 			   }else if(line == null && incompNum.size() == 0){
@@ -181,15 +200,6 @@ public class IRGenerator {
 	return IR.size();
     }
 
-    static void addWkToList(){
-	List<String> wk = ParserVisitorImplements.importWk();
-	var_list.addAll(wk);
-	for(int i=0;i<wk.size();i++){
-	    flame_size += 4;
-	    var_address.add(-flame_size);
-	}
-    }	
-    
     static int getAddress(String str){
 	int index = var_list.indexOf(str);
 	//System.out.println(str+":"+index);

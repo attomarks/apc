@@ -42,38 +42,25 @@ public class AssemblyCode {
 
     static void headTemp2(){
 	pw.println("    .text");
-	//pw.println("    .globl  main");
-
-	//pw.println("    .type   main, @function");
-	//pw.println("main:");
-	//pw.println("    pushq   %rbp");
-	//pw.println("    movq    %rsp, %rbp");
     }
     
     static void footTemp(){
-	//pw.println("    movl    $0, %eax");
-	//pw.println("    movq    %rbp, %rsp");
-	//pw.println("    popq    %rbp");
-	//pw.println("    leave");
-	//pw.println("    ret");
-	//pw.println("    .size   main,.-main");
-	//pw.println("    .ident  \"GCC: (GNU) 8.1.0\"");
-	//pw.println("    .section    .note.GNU-stack,\"\",@progbits");
 	pw.close();
     }
 
-    /*static void expandStack(int size){
-	pw.println("    subq    $"+size+", %rsp");
-	}*/
-
     static void function(int flame, String name){
+    	varList.clear();
+    	varAddress.clear();
+    	varType.clear();
+    	stack = 0;
+    	paraNum = 1;
 	pw.println("    .globl  "+name);
 	pw.println("    .type   "+name+", @function");
 	pw.println(name+":");
 	pw.println("    pushq   %rbp");
 	pw.println("    movq    %rsp, %rbp");
-	pw.println("    subq    $"+flame+", %rsp");
-
+	if(name.equals("main"))
+			pw.println("    subq    $"+flame+", %rsp");
 	funcName.add(name);
 	funcNameNow = name;
     }
@@ -383,16 +370,20 @@ public class AssemblyCode {
 		;
 	else
 	    pw.println("    movl    $"+str+", %eax");
-	pw.println("    leave");
+	if(funcNameNow.equals("main")) {
+		pw.println("    leave");
+	}else {
+		pw.println("    pop     %rbp");
+	}
 	pw.println("    ret");
 	pw.println("    .size   "+funcNameNow+",.-"+funcNameNow);
 
-	varList.clear();
+	/*varList.clear();
 	varAddress.clear();
 	varType.clear();
 	stack = 0;
-	paraNum = 1;
-	funcNameNow = null;
+	paraNum = 1;*/
+	//funcNameNow = null;
     }
 
     static int searchAddress(String name){
